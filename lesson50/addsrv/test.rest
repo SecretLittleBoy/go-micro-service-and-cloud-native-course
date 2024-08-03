@@ -1,0 +1,25 @@
+###
+POST http://127.0.0.1:8080/sum
+Content-Type: application/json
+
+{
+  "a": 1,
+  "b": 2
+}
+
+###
+POST http://127.0.0.1:8080/concat
+Content-Type: application/json
+
+{
+  "a": "1 3",
+  "b": "2 4"
+}
+
+###
+POST http://127.0.0.1:8080/trim
+Content-Type: application/json
+
+{
+  "s": "1 3 2 4 "
+}

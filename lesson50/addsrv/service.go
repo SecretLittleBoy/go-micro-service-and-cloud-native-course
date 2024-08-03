@@ -163,11 +163,11 @@ func (tm withTrimMiddleware) Concat(ctx context.Context, a, b string) (res strin
 	// 需要新的逻辑处理
 	// 外部调用我们的Concat方法时
 	// 1. 发起RPC调用 trim_service 对数据进行处理 （调用其他服务/依赖其他的服务）
-	respA, err := tm.trimService(ctx, trimRequest{s: a}) // 执行，其实是作为客户端对外发起请求
+	respA, err := tm.trimService(ctx, trimRequest{S: a}) // 执行，其实是作为客户端对外发起请求
 	if err != nil {
 		return "", err
 	}
-	respB, err := tm.trimService(ctx, trimRequest{s: b}) // 执行，其实是作为客户端对外发起请求
+	respB, err := tm.trimService(ctx, trimRequest{S: b}) // 执行，其实是作为客户端对外发起请求
 	if err != nil {
 		return "", err
 	}
@@ -175,5 +175,13 @@ func (tm withTrimMiddleware) Concat(ctx context.Context, a, b string) (res strin
 	trimB := respB.(trimResponse) // 拿到处理后的响应
 
 	// 2. 拿到处理后的数据再拼接
-	return tm.next.Concat(ctx, trimA.s, trimB.s)
+	return tm.next.Concat(ctx, trimA.S, trimB.S)
+}
+
+func (tm withTrimMiddleware) Trim(ctx context.Context, s string) (string, error) {
+	respose, err := tm.trimService(ctx, trimRequest{S: s})
+	if err != nil {
+		return "", err
+	}
+	return respose.(trimResponse).S, nil
 }

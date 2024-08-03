@@ -28,9 +28,9 @@ var (
 )
 
 func main() {
-	flag.Parse() // !!!
-	// 前置资源初始化
+	flag.Parse()
 
+	// 前置资源初始化
 	srv := NewService()
 	// 初始化带logger的service
 	logger := log.NewJSONLogger(os.Stdout)
@@ -73,7 +73,7 @@ func main() {
 		return
 	}
 	defer conn.Close()
-	trimEndpoint := makeTrimEndpoint(conn)
+	trimEndpoint := createTrimEndpoint(conn)
 	srv = NewServiceWithTrim(trimEndpoint, srv)
 
 	var g errgroup.Group

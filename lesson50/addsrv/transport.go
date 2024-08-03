@@ -38,6 +38,14 @@ func decodeConcatRequest(ctx context.Context, r *http.Request) (interface{}, err
 	return request, nil
 }
 
+func decodeTrimRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var request trimRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
 // 编码
 // 把响应数据 按协议和编码 返回
 // w: 代表响应的网络句柄
@@ -66,6 +74,12 @@ func NewHTTPServer(svc AddService, logger log.Logger) http.Handler {
 		encodeResponse,
 	)
 
+	trimHandler := httptransport.NewServer(
+		makeTrimEndpoint(*svc.(*withTrimMiddleware)),
+		decodeTrimRequest,
+		encodeResponse,
+	)
+
 	// github.com/gorilla/mux
 	// r := mux.NewRouter()
 
@@ -76,6 +90,7 @@ func NewHTTPServer(svc AddService, logger log.Logger) http.Handler {
 	r := gin.Default()
 	r.POST("/sum", gin.WrapH(sumHandler))
 	r.POST("/concat", gin.WrapH(concatHandler))
+	r.POST("/trim", gin.WrapH(trimHandler))
 
 	return r
 }
@@ -152,11 +167,11 @@ func encodeGRPCConcatResponse(_ context.Context, response interface{}) (interfac
 // 对外发起gRPC请求
 func encodeTrimRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(trimRequest)
-	return &pb.TrimRequest{S: req.s}, nil
+	return &pb.TrimRequest{S: req.S}, nil
 }
 
 // decodeTrimResponse 将收到的gRPC响应转为内部的响应结构体
 func decodeTrimResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.TrimResponse)
-	return trimResponse{s: resp.S}, nil
+	return trimResponse{S: resp.S}, nil
 }

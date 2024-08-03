@@ -104,3 +104,7 @@ func (s logMiddleware) Concat(ctx context.Context, a, b string) (res string, err
 	res, err = s.next.Concat(ctx, a, b)
 	return
 }
+
+// make sure the service implements the AddService interface
+var _ AddService = (*addService)(nil)
+var _ AddService = (*logMiddleware)(nil)

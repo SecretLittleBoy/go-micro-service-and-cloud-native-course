@@ -36,11 +36,11 @@ type ConcatResponse struct {
 
 // trim
 type trimRequest struct {
-	s string
+	S string `json:"s"`
 }
 
 type trimResponse struct {
-	s string
+	S string
 }
 
 // 2. endpoint
@@ -68,9 +68,20 @@ func makeConcatEndpoint(srv AddService) endpoint.Endpoint {
 	}
 }
 
-// makeTrimEndpoint 客户端endpoint
+func makeTrimEndpoint(tm withTrimMiddleware) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(trimRequest)
+		s, err := tm.Trim(ctx, req.S)
+		if err != nil {
+			return "", err
+		}
+		return trimResponse{S: s}, err
+	}
+}
+
+// createTrimEndpoint 客户端endpoint
 // 不是直接的提供服务，而是请求其他服务
-func makeTrimEndpoint(conn *grpc.ClientConn) endpoint.Endpoint {
+func createTrimEndpoint(conn *grpc.ClientConn) endpoint.Endpoint {
 	return grpctransport.NewClient(
 		conn,
 		"pb.Trim",          // 服务名
