@@ -54,9 +54,9 @@ type (
 	}
 )
 
-func newUserModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultUserModel {
+func newUserModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultUserModel {
 	return &defaultUserModel{
-		CachedConn: sqlc.NewConn(conn, c),
+		CachedConn: sqlc.NewConn(conn, c, opts...),
 		table:      "`user`",
 	}
 }
@@ -80,7 +80,7 @@ func (m *defaultUserModel) Delete(ctx context.Context, id int64) error {
 func (m *defaultUserModel) FindOne(ctx context.Context, id int64) (*User, error) {
 	userIdKey := fmt.Sprintf("%s%v", cacheUserIdPrefix, id)
 	var resp User
-	err := m.QueryRowCtx(ctx, &resp, userIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
+	err := m.QueryRowCtx(ctx, &resp, userIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
 		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userRows, m.table)
 		return conn.QueryRowCtx(ctx, v, query, id)
 	})
@@ -97,7 +97,7 @@ func (m *defaultUserModel) FindOne(ctx context.Context, id int64) (*User, error)
 func (m *defaultUserModel) FindOneByUserId(ctx context.Context, userId int64) (*User, error) {
 	userUserIdKey := fmt.Sprintf("%s%v", cacheUserUserIdPrefix, userId)
 	var resp User
-	err := m.QueryRowIndexCtx(ctx, &resp, userUserIdKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
+	err := m.QueryRowIndexCtx(ctx, &resp, userUserIdKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v any) (i any, e error) {
 		query := fmt.Sprintf("select %s from %s where `user_id` = ? limit 1", userRows, m.table)
 		if err := conn.QueryRowCtx(ctx, &resp, query, userId); err != nil {
 			return nil, err
@@ -117,7 +117,7 @@ func (m *defaultUserModel) FindOneByUserId(ctx context.Context, userId int64) (*
 func (m *defaultUserModel) FindOneByUsername(ctx context.Context, username string) (*User, error) {
 	userUsernameKey := fmt.Sprintf("%s%v", cacheUserUsernamePrefix, username)
 	var resp User
-	err := m.QueryRowIndexCtx(ctx, &resp, userUsernameKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
+	err := m.QueryRowIndexCtx(ctx, &resp, userUsernameKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v any) (i any, e error) {
 		query := fmt.Sprintf("select %s from %s where `username` = ? limit 1", userRows, m.table)
 		if err := conn.QueryRowCtx(ctx, &resp, query, username); err != nil {
 			return nil, err
@@ -161,11 +161,11 @@ func (m *defaultUserModel) Update(ctx context.Context, newData *User) error {
 	return err
 }
 
-func (m *defaultUserModel) formatPrimary(primary interface{}) string {
+func (m *defaultUserModel) formatPrimary(primary any) string {
 	return fmt.Sprintf("%s%v", cacheUserIdPrefix, primary)
 }
 
-func (m *defaultUserModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {
+func (m *defaultUserModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
 	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userRows, m.table)
 	return conn.QueryRowCtx(ctx, v, query, primary)
 }

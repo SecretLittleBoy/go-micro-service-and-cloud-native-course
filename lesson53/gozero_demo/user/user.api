@@ -8,5 +8,5 @@ type Response {
 
 service user-api {
 	@handler UserHandler
-	get /from/:name(Request) returns (Response)
+	get /from/:name (Request) returns (Response)
 }
